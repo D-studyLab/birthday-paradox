@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>誕生日のパラドックス｜何人集まれば同じ誕生日がいるのか、動かして確かめる</title>
+<meta name="description" content="23人で50%。信じられない人のために、人数を動かすと確率が変わり、1万部屋ぶん実際に人を集めて確かめられるページ。「自分と同じ誕生日」との違いも並べて表示します。登録不要・すべて端末内で計算。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://d-studylab.com/birthday-paradox/">
+<meta property="og:title" content="誕生日のパラドックス｜何人集まれば同じ誕生日がいるのか">
+<meta property="og:description" content="答えは23人。信じられない人のために、動かして1万部屋ぶん試せるようにしました。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://d-studylab.com/birthday-paradox/">
+<meta property="og:image" content="https://d-studylab.com/birthday-paradox/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root { --bg:#0f1216; --panel:#171b21; --line:#2a323c; --txt:#e6e9ee; --sub:#9aa4b1;
+          --acc:#7cc4ff; --good:#6bdf9a; --bad:#ff9b8a; --gold:#ffcf6b; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f4f6f8; --panel:#fff; --line:#dde3ea; --txt:#1b2027; --sub:#5b6673;
+            --acc:#1f6fb2; --good:#1f8a52; --bad:#c0492f; --gold:#a6791b; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); line-height:1.7;
+         font-family:"Segoe UI","Yu Gothic UI",Meiryo,sans-serif; overflow-x:hidden; }
+  .wrap { max-width:760px; margin:0 auto; padding:16px 16px 60px; }
+  h1 { font-size:20px; margin:8px 0 2px; }
+  .sub { color:var(--sub); font-size:13px; margin-bottom:16px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px;
+           padding:16px; margin-bottom:14px; }
+  .panel h2 { font-size:14px; margin:0 0 10px; color:var(--sub); }
+  button { background:var(--acc); color:#08202f; border:0; border-radius:10px; padding:12px 22px;
+           font-size:15px; font-weight:bold; cursor:pointer; min-height:44px; font-family:inherit; }
+  button.ghost { background:transparent; color:var(--acc); border:1px solid var(--acc); font-weight:normal; }
+  button:disabled { opacity:.4; cursor:default; }
+  @media (prefers-color-scheme: light) { button { color:#fff; } button.ghost { color:var(--acc); } }
+
+  /* スライダー（スマホでつまめる大きさ） */
+  input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:44px;
+                      background:transparent; margin:0; touch-action:pan-y; cursor:pointer; }
+  input[type=range]:focus { outline:none; }
+  input[type=range]:focus-visible { outline:2px solid var(--acc); outline-offset:2px; border-radius:6px; }
+  input[type=range]::-webkit-slider-runnable-track { height:6px; border-radius:3px; background:var(--line); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:28px; height:28px;
+      margin-top:-11px; border-radius:50%; background:var(--acc); border:2px solid var(--panel);
+      box-shadow:0 1px 4px rgba(0,0,0,.35); }
+  input[type=range]::-moz-range-track { height:6px; border-radius:3px; background:var(--line); }
+  input[type=range]::-moz-range-thumb { width:28px; height:28px; border-radius:50%; background:var(--acc);
+      border:2px solid var(--panel); box-shadow:0 1px 4px rgba(0,0,0,.35); }
+
+  .big { text-align:center; margin:6px 0 2px; }
+  .bignum { font-size:56px; font-weight:bold; line-height:1.05; color:var(--gold);
+            font-variant-numeric:tabular-nums; }
+  .bigcap { font-size:14px; color:var(--sub); }
+  .nrow { display:flex; align-items:baseline; justify-content:center; gap:8px; margin-bottom:2px; }
+  .nrow .n { font-size:30px; font-weight:bold; font-variant-numeric:tabular-nums; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px; }
+  .chip { border:1px solid var(--line); background:var(--bg); color:var(--txt); border-radius:20px;
+          padding:7px 13px; font-size:13px; cursor:pointer; min-height:38px; }
+  .chip:hover, .chip.on { border-color:var(--acc); color:var(--acc); }
+
+  canvas { width:100%; border:1px solid var(--line); border-radius:10px; background:var(--bg); display:block; }
+  .legend { font-size:12px; color:var(--sub); margin-top:6px; }
+
+  /* 部屋の点 */
+  .rooms { display:flex; flex-wrap:wrap; gap:3px; margin:10px 0 4px; }
+  .dot { width:10px; height:10px; border-radius:2px; background:var(--line); }
+  .dot.hit { background:var(--gold); }
+  .simrow { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+  .simres { font-size:15px; font-variant-numeric:tabular-nums; }
+  .simres b { color:var(--gold); font-size:20px; }
+
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  th,td { border:1px solid var(--line); padding:8px 10px; text-align:left; }
+  th { background:var(--bg); color:var(--sub); font-weight:600; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .vs { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .vs > div { border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center; }
+  .vs .v { font-size:30px; font-weight:bold; font-variant-numeric:tabular-nums; }
+  .vs .a { color:var(--gold); } .vs .b { color:var(--sub); }
+  .vs small { color:var(--sub); font-size:12px; display:block; line-height:1.5; }
+  p { font-size:15px; }
+  .note { font-size:12px; color:var(--sub); margin-top:16px; border-top:1px solid var(--line); padding-top:10px; }
+  .note a { color:var(--acc); }
+  @media (max-width:430px) { .vs { grid-template-columns:1fr; } .bignum { font-size:46px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎂 誕生日のパラドックス</h1>
+  <div class="sub">教室に何人いれば、同じ誕生日のペアが50%の確率でいるか。答えは23人です。信じられない人のために、動かせるようにしました。</div>
+
+  <div class="panel">
+    <h2>人数を動かしてみてください</h2>
+    <div class="nrow"><span class="n" id="nv">23</span><span style="color:var(--sub)">人の部屋</span></div>
+    <input type="range" id="n" min="2" max="80" step="1" value="23" aria-label="人数">
+    <div class="big">
+      <div class="bignum" id="p">50.7%</div>
+      <div class="bigcap">同じ誕生日のペアが<b>少なくとも1組いる</b>確率</div>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="panel">
+    <h2>本当にそうなるのか、実際に部屋を作ってみる</h2>
+    <p style="margin:0 0 4px">その人数の部屋を1万個つくって、誕生日をくじ引きします。理論値に寄るはずです。</p>
+    <div class="simrow">
+      <button id="run">1万部屋つくる</button>
+      <div class="simres" id="simres">まだ試していません</div>
+    </div>
+    <div class="rooms" id="dots"></div>
+    <div class="legend">最初の200部屋だけ表示しています。<span style="color:var(--gold)">■</span>＝同じ誕生日のペアがいた部屋</div>
+  </div>
+
+  <div class="panel">
+    <h2>なぜ23人で足りるのか</h2>
+    <p style="margin:0 0 10px">「自分と同じ誕生日の人」を探していると思うから、少なく感じます。実際に数えているのは<b>すべてのペア</b>です。</p>
+    <div class="vs">
+      <div>
+        <div class="v a" id="pairP">50.7%</div>
+        <small><b>誰かと誰かが</b>同じ<br>ペアの数 <b id="pairN">253</b> 通り</small>
+      </div>
+      <div>
+        <div class="v b" id="youP">6.1%</div>
+        <small><b>自分と</b>同じ<br>ペアの数 <b id="youN">22</b> 通り</small>
+      </div>
+    </div>
+    <p style="margin:12px 0 0;font-size:14px;color:var(--sub)">
+      23人なら、自分がからむ組み合わせは22通りしかありません。でも部屋全体では
+      23×22÷2＝<b style="color:var(--txt)">253通り</b>のペアがあります。
+      <b style="color:var(--txt)">11倍以上見ている</b>ので、当たりやすいのは当然でした。<br>
+      ちなみに「自分と同じ誕生日」が50%を超えるには<b style="color:var(--txt)">253人</b>必要です。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>人数と確率の関係</h2>
+    <canvas id="cv" width="1400" height="620"></canvas>
+    <div class="legend"><span style="color:var(--gold)">■</span> 誰かと誰かが同じ　<span style="color:var(--sub)">■</span> 自分と同じ　／　破線＝50%</div>
+  </div>
+
+  <div class="panel">
+    <h2>身近な人数だと</h2>
+    <div class="scroll">
+      <table id="tbl">
+        <tr><th>集まり</th><th class="n">人数</th><th class="n">ペアがいる確率</th></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="note">
+    うるう年（2月29日）は扱っていません。365日すべて同じ確率で生まれる前提の計算です。
+    実際の出生日には季節の偏りがあり、偏りがあると<b>確率はさらに上がります</b>（同じ日に集まりやすくなるため）。
+    計算はすべてこのページの中で行っていて、どこにも送信していません。<br>
+    ほかのゲーム → <a href="/games/">ミニゲームゲームズ</a> ・ <a href="/">D-studyLab</a>
+  </div>
+</div>
+
+<script src="birthday.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var n = 23, simSeed = 1;
+
+  function render() {
+    $("nv").textContent = n;
+    var p = BD.probAtLeastOnePair(n), y = BD.probSomeoneMatchesYou(n);
+    $("p").textContent = BD.fmtPct(p);
+    $("pairP").textContent = BD.fmtPct(p);
+    $("youP").textContent = BD.fmtPct(y);
+    $("pairN").textContent = (n * (n - 1) / 2).toLocaleString("ja-JP");
+    $("youN").textContent = (n - 1).toLocaleString("ja-JP");
+    [].forEach.call(document.querySelectorAll(".chip"), function (c) {
+      c.classList.toggle("on", +c.dataset.n === n);
+    });
+    draw();
+  }
+
+  // 例のチップ
+  BD.EXAMPLES.forEach(function (e) {
+    var b = document.createElement("button");
+    b.className = "chip"; b.dataset.n = e.n; b.textContent = e.label;
+    b.onclick = function () { n = e.n; $("n").value = n; render(); };
+    $("chips").appendChild(b);
+  });
+
+  // 身近な例の表
+  BD.EXAMPLES.forEach(function (e) {
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + e.label + "</td><td class='n'>" + e.n + "人</td>" +
+                   "<td class='n' style='color:var(--gold);font-weight:bold'>" +
+                   BD.fmtPct(BD.probAtLeastOnePair(e.n)) + "</td>";
+    $("tbl").appendChild(tr);
+  });
+
+  $("n").addEventListener("input", function () { n = +this.value; render(); });
+
+  // ---- グラフ ----
+  function draw() {
+    var cv = $("cv"), g = cv.getContext("2d");
+    var W = cv.width, H = cv.height, L = 70, R = 20, T = 20, B2 = 46;
+    var cs = getComputedStyle(document.body);
+    var col = function (v) { return cs.getPropertyValue(v).trim(); };
+    g.clearRect(0, 0, W, H);
+    var x = function (v) { return L + (v - 2) / (80 - 2) * (W - L - R); };
+    var yy = function (v) { return T + (1 - v) * (H - T - B2); };
+    // 目盛
+    g.strokeStyle = col("--line"); g.fillStyle = col("--sub");
+    g.lineWidth = 2; g.font = "22px sans-serif"; g.textAlign = "right";
+    for (var t = 0; t <= 1.0001; t += 0.25) {
+      g.beginPath(); g.moveTo(L, yy(t)); g.lineTo(W - R, yy(t)); g.stroke();
+      g.fillText(Math.round(t * 100) + "%", L - 10, yy(t) + 8);
+    }
+    g.textAlign = "center";
+    [2, 20, 40, 60, 80].forEach(function (v) { g.fillText(v + "人", x(v), H - 12); });
+    // 50%の破線
+    g.save(); g.setLineDash([10, 8]); g.strokeStyle = col("--sub");
+    g.beginPath(); g.moveTo(L, yy(0.5)); g.lineTo(W - R, yy(0.5)); g.stroke(); g.restore();
+    // 曲線
+    function curve(fn, color, width) {
+      g.strokeStyle = color; g.lineWidth = width; g.beginPath();
+      for (var v = 2; v <= 80; v++) { var px = x(v), py = yy(fn(v)); v === 2 ? g.moveTo(px, py) : g.lineTo(px, py); }
+      g.stroke();
+    }
+    curve(function (v) { return BD.probSomeoneMatchesYou(v); }, col("--sub"), 4);
+    curve(function (v) { return BD.probAtLeastOnePair(v); }, col("--gold"), 6);
+    // いまの人数
+    var px = x(n), py = yy(BD.probAtLeastOnePair(n));
+    g.strokeStyle = col("--acc"); g.lineWidth = 3;
+    g.beginPath(); g.moveTo(px, T); g.lineTo(px, H - B2); g.stroke();
+    g.fillStyle = col("--acc"); g.beginPath(); g.arc(px, py, 11, 0, Math.PI * 2); g.fill();
+  }
+
+  // ---- シミュレーション ----
+  $("run").onclick = function () {
+    var btn = this; btn.disabled = true; $("simres").textContent = "くじを引いています…";
+    setTimeout(function () {
+      var rng = BD.mulberry((simSeed++ * 2654435761) >>> 0);
+      var ROOMS = 10000, hit = 0, first = [];
+      for (var r = 0; r < ROOMS; r++) {
+        var h = BD.runOneRoom(n, rng);
+        if (h) hit++;
+        if (r < 200) first.push(h);
+      }
+      var rate = hit / ROOMS, th = BD.probAtLeastOnePair(n);
+      $("simres").innerHTML = "1万部屋のうち <b>" + hit.toLocaleString("ja-JP") + "部屋</b>（" +
+        BD.fmtPct(rate) + "）　<span style='color:var(--sub)'>理論値 " + BD.fmtPct(th) + "</span>";
+      var d = $("dots"); d.innerHTML = "";
+      first.forEach(function (h) {
+        var e = document.createElement("div"); e.className = "dot" + (h ? " hit" : ""); d.appendChild(e);
+      });
+      btn.disabled = false;
+    }, 30);
+  };
+
+  window.addEventListener("resize", draw);
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", draw);
+  }
+  render();
+})();
+</script>
+</body>
+</html>
